@@ -1,0 +1,43 @@
+version: '3.7'
+
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: dwwm_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - 3306:3306
+    volumes:
+      - .docker/data/db:/var/lib/mysql
+    networks:
+      default:
+        aliases:
+          - mysql.dwwm.m2i
+  php:
+    container_name: dwwm_php
+    build: .docker/php
+    working_dir: ${WORKDIR}
+    volumes:
+      - ./app:${WORKDIR}
+    depends_on:
+      - mysql
+
+  app_server:
+    container_name: dwwm_nginx
+    build: .docker/nginx
+    working_dir: ${WORKDIR}
+    volumes:
+      - ./app:${WORKDIR}
+    ports:
+      - 80:80
+    networks:
+      default:
+        aliases:
+          - 'dwwm.m2i'
+    depends_on:
+      - mysql
+      - php
